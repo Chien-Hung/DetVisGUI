@@ -21,6 +21,7 @@ parse.add_argument('--detBoxColor', default=(255, 255, 0), help='detection box c
 parse.add_argument('--gtBoxColor', default=(255, 255, 255), help='groundtruth box color')
 parse.add_argument('--has_anno', default=True,
                    help='There are bounding box annotations in json file / Annotataions folder.')
+parse.add_argument('--output', default='output', help='image save folder')
 
 
 args = parse.parse_args()
@@ -344,7 +345,11 @@ class vis_tool:
         # ====== ohter attribute ======
         self.img_name = ''
         self.show_img = None
-        self.output = 'output'
+        self.output = args.output
+
+        if not os.path.isdir(self.output):
+            os.makedirs(self.output)
+            
         self.img_list = self.dataInfo.img_list
 
 
