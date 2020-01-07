@@ -16,11 +16,19 @@ matplotlib.use("TkAgg")
 
 
 parse = argparse.ArgumentParser(description="DetVisGUI")
-parse.add_argument('-f', '--format', default='VOC', help='VOC or COCO dataset format')
+
+# dataset information
+parse.add_argument('-f', '--format', default='COCO', help='VOC or COCO dataset format')
+parse.add_argument('--img_root', default='data/COCO/test2017_small', help='data image path')
+parse.add_argument('--anno_root', default='data/COCO/image_info_test-dev2017_small.json', help='data annotation path')
+parse.add_argument('--det_file', default='data/COCO/coco_test_results.pkl', help='detection result file path')
+parse.add_argument('--no_gt', action='store_true', help='There are bounding box annotations in json file / Annotataions folder')
+parse.add_argument('--txt', default='', help='VOC image list txt file')
+
+parse.add_argument('-r', action='store_true', help='detection result format is (cls, img) or (img, cls)')
 parse.add_argument('--detBoxColor', default=(255, 255, 0), help='detection box color')
 parse.add_argument('--gtBoxColor', default=(255, 255, 255), help='groundtruth box color')
-parse.add_argument('--has_anno', default=True,
-                   help='There are bounding box annotations in json file / Annotataions folder.')
+
 parse.add_argument('--output', default='output', help='image save folder')
 
 
@@ -30,31 +38,22 @@ args = parse.parse_args()
 class dataInfoCOCO:
     def __init__(self):
         self.dataset = 'COCO'
-        # self.img_root = r'C:\Users\Song\Desktop\Hung\vistool\coco_small\val2017'
-        # self.anno_root = r'C:\Users\Song\Desktop\Hung\vistool\coco_small\instances_val2017.json'
-        # self.det_file = r'C:\Users\Song\Desktop\Hung\vistool\coco_small\detections.pkl'
 
-        # self.img_root = 'data/COCO/val2017_small'
-        # self.anno_root = 'data/COCO/instances_val2017_small.json'
-        # self.det_file = 'data/COCO/coco_val_results.pkl'
-        # self.has_anno = True
-
-        self.img_root = 'data/COCO/test2017_small'
-        self.anno_root = 'data/COCO/image_info_test-dev2017_small.json'
-        self.det_file = 'data/COCO/coco_test_results.pkl'
-
-        self.has_anno = args.has_anno
+        self.img_root = args.img_root
+        self.anno_root = args.anno_root
+        self.det_file = args.det_file
+        self.has_anno = not args.no_gt
 
         def jsonParser2(train_anno, has_anno):
             with open(train_anno) as f:
                 data = json.load(f)
 
-            print(list(data.keys()))
+            # print(list(data.keys()))
 
             info = data['info']
             licenses = data['licenses']
-            print("info : ", info)
-            print("licenses : ", licenses)
+            # print("info : ", info)
+            # print("licenses : ", licenses)
 
             # categories[0] : {'name': 'person', 'id': 1, 'supercategory': 'person'}
             category = [c['name'] for c in data['categories']]  # 80 classes
@@ -154,20 +153,27 @@ class dataInfoCOCO:
 
     def get_det_results(self):
         det_file = self.det_file
-        if det_file != None:
-            print(det_file)
+        if det_file != '':
             f = open(det_file, 'rb')
 
             det_results = np.asarray(pickle.load(f))  # [cls(bg + cls), images]
             f.close()
 
-            print("saved det results : ", det_results.shape)
-
             # must be (class, image)
             # mmdetection : (image, class)
+
             det_results = np.transpose(det_results, (1, 0))  # (20, 483)
 
-            print("output det results : ", det_results.shape)
+            if args.r:
+                det_results = np.transpose(det_results, (1, 0))  # (20, 483)
+
+            print("=======================================================================")
+            print("CLASS NUMBER : ", det_results.shape[0])
+            print("IMAGE NUMBER : ", det_results.shape[1])
+            print("-----------------------------------------------------------------------")
+            print("pkl saved format would be different according to your detection code. ")
+            print("If class number and image number are reverse, please add -r in command.")
+            print("=======================================================================")
             return det_results
 
         else:
@@ -191,18 +197,13 @@ class dataInfoCOCO:
 class dataInfoVOC:
     def __init__(self):
         self.dataset = 'PASCAL VOC'
-        self.img_root = 'data/VOCdevkit/VOC2007/JPEGImages'
-        self.anno_root = 'data/VOCdevkit/VOC2007/Annotations'
-        # self.data_root = r'C:\Users\Song\Desktop\Hung\vistool\VOC2007'
-        # self.det_file = r'C:\Users\Song\Desktop\Hung\vistool\det_files\pascal_voc\detections.pkl'
-
-        self.det_file = 'data/VOCdevkit/voc_train_results.pkl'
-        # self.det_file = 'data/VOCdevkit/voc_test_results.pkl'
-        # self.det_file = 'data/VOCdevkit/detections_small.pkl'
-        self.txt = 'data/VOCdevkit/VOC2007/ImageSets/Main/train.txt'
+        self.img_root = args.img_root
+        self.anno_root = args.anno_root
+        self.det_file = args.det_file
+        self.txt = args.txt
+        self.has_anno = not args.no_gt
 
         self.data_root = self.anno_root.replace('/Annotations', '')
-        self.has_anno = args.has_anno
 
         # according txt to get image list
         self.img_list = self.get_img_list()
@@ -226,19 +227,26 @@ class dataInfoVOC:
 
     def get_det_results(self):
         det_file = self.det_file
-        if det_file != None:
+        if det_file != '':
 
             f = open(det_file, 'rb')
 
             det_results = np.asarray(pickle.load(f))  # [cls(bg + cls), images]
             f.close()
 
-            print("saved det results : ", det_results.shape)
-
             # mmdetection : (image, class)
             det_results = np.transpose(det_results, (1, 0))  # (20, 483)
 
-            print("output det results : ", det_results.shape)
+            if args.r:
+                det_results = np.transpose(det_results, (1, 0))  # (20, 483)
+
+            print("=======================================================================")
+            print("CLASS NUMBER : ", det_results.shape[0])
+            print("IMAGE NUMBER : ", det_results.shape[1])
+            print("-----------------------------------------------------------------------")
+            print("pkl saved format would be different according to your detection code. ")
+            print("If class number and image number are reverse, please add -r in command.")
+            print("=======================================================================")
             return det_results
 
         else:
@@ -321,7 +329,7 @@ class vis_tool:
         self.checkbutton_cat = Checkbutton(self.window, text='LabelText', font=('Arial', 10, 'bold'), variable=self.ShowCategory, command=self.change_img)
 
         self.ShowDets = IntVar(value=1)
-        self.checkbutton_det = Checkbutton(self.window, text='Detections', font=('Arial', 10, 'bold'), variable=self.ShowDets, command=self.change_checkbutton_det, fg='#0000FF')
+        self.checkbutton_det = Checkbutton(self.window, text='Detections', font=('Arial', 10, 'bold'), variable=self.ShowDets, command=self.change_img, fg='#0000FF')
 
         self.ShowGTs = IntVar(value=1)
         self.checkbutton_gt = Checkbutton(self.window, text='Groundtruth', font=('Arial', 10, 'bold'), variable=self.ShowGTs, command=self.change_img, fg='#FF8C00')
@@ -349,12 +357,8 @@ class vis_tool:
 
         if not os.path.isdir(self.output):
             os.makedirs(self.output)
-            
+
         self.img_list = self.dataInfo.img_list
-
-
-    def change_checkbutton_det(self):
-        self.change_img()
 
 
     def changeThreshold(self, event=None):
@@ -458,7 +462,7 @@ class vis_tool:
             objs = self.dataInfo.get_singleImg_gt(name)
             img = self.draw_gt_boxes(img, objs)
 
-        if self.dataInfo.results != None and self.ShowDets.get():
+        if self.dataInfo.results is not None and self.ShowDets.get():
             dets = self.dataInfo.get_singleImg_dets(name)
             img = self.draw_det_boxes(img, dets)
             self.clear_add_listBox3()
@@ -531,7 +535,7 @@ class vis_tool:
         self.changeThreshold()
 
     def save_img(self):
-        print('save_img' + self.img_name)
+        print('Save Image : ' + self.img_name)
         cv2.imwrite(os.path.join(self.output, self.img_name), cv2.cvtColor(self.show_img, cv2.COLOR_BGR2RGB))
         self.listBox1_label.config(bg='#CCFF99')
 
@@ -545,7 +549,7 @@ class vis_tool:
             self.changeThresholdButton(0.1)
         if event.keysym == 'Left':
             self.changeThresholdButton(-0.1)
-        elif event.keysym == 'Escape':
+        elif event.keysym == 'q':
             self.window.quit()
         elif event.keysym == 's':
             if self.window.focus_get() == self.listBox1:
