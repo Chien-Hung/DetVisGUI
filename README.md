@@ -1,8 +1,8 @@
 # DetVisGUI
 
-GUI for easily visualizing detection results .
+GUI for easily visualizing object detection results .
 
-This GUI can plot detection results with different threshold dynamically. It will be convient for checking detection results and groundtruth. This code support Pascal VOC and COCO data format.
+This GUI can plot object detection results with different threshold dynamically. It would be convient for checking object detection results and groundtruth. This code supports Pascal VOC and COCO data formats.
 
 
 ![alt tag](./demo/demo1.png)
