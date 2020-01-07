@@ -1,5 +1,9 @@
 # DetVisGUI
-GUI for easy detection results visualization
+
+GUI for easily visualizing detection results .
+
+
+![alt tag](./demo/demo1.png)
 
 ---
 
@@ -31,7 +35,7 @@ $ python DetVisGUI.py --format COCO --img_root data/COCO/test2017_small --anno_r
 
 ## Hotkeys
 
-|  Hotkeys   |                                            |
+|     KEY    | ACTION                                     |
 |:----------:|:------------------------------------------:|
 |    ↑  ↓    | Change Image.                              |
 |    →  ←    | Change detection threshold.                |
