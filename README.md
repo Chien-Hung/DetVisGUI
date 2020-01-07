@@ -1,6 +1,7 @@
 # DetVisGUI
 GUI for easy detection results visualization
 
+---
 
 **Show Pascal VOC training results:** 
 
@@ -26,8 +27,11 @@ $ python DetVisGUI.py --format COCO --img_root data/COCO/val2017_small --anno_ro
 $ python DetVisGUI.py --format COCO --img_root data/COCO/test2017_small --anno_root data/COCO/image_info_test-dev2017_small.json --det_file data/COCO/coco_test_results.pkl --no_gt
 ```
 
-**Hotkeys** 
+---
 
+## Hotkeys
+
+|:-------------------------------------------------------:|
 |    ↑  ↓    | Change Image.                              |
 |    →  ←    | Change detection threshold.                |
 |     s      | Save plot image in output folder.          |
