@@ -31,7 +31,8 @@ $ python DetVisGUI.py --format COCO --img_root data/COCO/test2017_small --anno_r
 
 ## Hotkeys
 
-|:-------------------------------------------------------:|
+|  Hotkeys   |                                            |
+|:----------:|:------------------------------------------:|
 |    ↑  ↓    | Change Image.                              |
 |    →  ←    | Change detection threshold.                |
 |     s      | Save plot image in output folder.          |
