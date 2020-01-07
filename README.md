@@ -2,6 +2,8 @@
 
 GUI for easily visualizing detection results .
 
+This GUI can plot detection results with different threshold dynamically. It will be convient for checking detection results and groundtruth. This code support Pascal VOC and COCO data format.
+
 
 ![alt tag](./demo/demo1.png)
 
@@ -13,7 +15,9 @@ GUI for easily visualizing detection results .
 $ python DetVisGUI.py --format VOC --img_root data/VOCdevkit/VOC2007/JPEGImages --anno_root data/VOCdevkit/VOC2007/Annotations --txt data/VOCdevkit/VOC2007/ImageSets/Main/train.txt --det_file data/VOCdevkit/voc_train_results.pkl
 ```
 
-**Show Pascal VOC test results(no groundtruth):** 
+**Show Pascal VOC test results (no groundtruth):**  
+
+add '--no_gt' if the dataset is no groundtruth.
 
 ```
 $ python DetVisGUI.py --format VOC --img_root data/VOCdevkit/VOC2007/JPEGImages --anno_root data/VOCdevkit/VOC2007/Annotations --txt data/VOCdevkit/VOC2007/ImageSets/Main/test.txt --det_file data/VOCdevkit/voc_test_results.pkl --no_gt
@@ -25,7 +29,9 @@ $ python DetVisGUI.py --format VOC --img_root data/VOCdevkit/VOC2007/JPEGImages 
 $ python DetVisGUI.py --format COCO --img_root data/COCO/val2017_small --anno_root data/COCO/instances_val2017_small.json --det_file data/COCO/coco_val_results.pkl 
 ```
 
-**Show COCO test results (no groundtruth):** 
+**Show COCO test results (no groundtruth):**  
+
+add '--no_gt' if the dataset is no groundtruth.
 
 ```
 $ python DetVisGUI.py --format COCO --img_root data/COCO/test2017_small --anno_root data/COCO/image_info_test-dev2017_small.json --det_file data/COCO/coco_test_results.pkl --no_gt
