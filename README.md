@@ -1,8 +1,6 @@
 # DetVisGUI
 
-GUI for easily visualizing object detection results .
-
-This GUI can plot object detection results with different threshold dynamically. It would be convient for checking object detection results and groundtruth. This code supports Pascal VOC and COCO data formats.
+This GUI is for visualizing deep learning object detection (such as [mmdetection](https://github.com/open-mmlab/mmdetection)) results. It could display object detection results with different threshold dynamically, and would be convient for verifying object detection results and groundtruth. This code supports Pascal VOC and COCO data formats. 
 
 
 ![alt tag](./demo/demo2.gif)
