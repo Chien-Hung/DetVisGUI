@@ -122,12 +122,12 @@ class dataInfoCOCO:
                 count = 0
                 a = list(total_annotations.keys())
                 a = list(map(int, a))
-                print(a)
+                # print(a)
                 for image in images:
                     if image['id'] not in a:
                         count += 1
                         print(str(image['id']), image['file_name'])
-                print(count)
+                # print(count)
 
                 print('\n==============[ {} json info ]=============='.format(self.dataset))
                 print("Total Annotations: {}".format(len(annotations)))
