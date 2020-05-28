@@ -11,6 +11,8 @@ import matplotlib
 from tkinter import ttk
 import xml.etree.ElementTree as ET
 import argparse
+import pycocotools.mask as maskUtils
+import itertools
 
 matplotlib.use("TkAgg")
 
@@ -353,7 +355,12 @@ class vis_tool:
         try:
             self.threshold = float(self.th_entry.get())
             self.change_img()
-            self.listBox1.focus()   # focus on listBox1 for easy control
+
+            # after changing threshold, focus on listBox for easy control
+            if self.window.focus_get() == self.listBox2:
+                self.listBox2.focus()
+            else:
+                self.listBox1.focus()
 
         except ValueError:
             self.window.title("Please enter a number as score threshold.")
@@ -391,7 +398,7 @@ class vis_tool:
         return img
 
 
-    def draw_det_boxes(self, img, single_detection):
+    def draw_all_det_boxes(self, img, single_detection):
 
         for idx, cls_objs in enumerate(single_detection):
 
@@ -451,7 +458,7 @@ class vis_tool:
 
         if self.data_info.results is not None and self.show_dets.get():
             dets = self.data_info.get_singleImg_dets(name)
-            img = self.draw_det_boxes(img, dets)
+            img = self.draw_all_det_boxes(img, dets)
             self.clear_add_listBox2()
 
         self.show_img = img
@@ -466,6 +473,85 @@ class vis_tool:
         else:
             self.listBox1_label.config(bg='yellow')
 
+    # ===============================================================
+
+    def draw_one_det_boxes(self, img, single_detection, selected_idx):
+
+        idx_counter = 0
+        for idx, cls_objs in enumerate(single_detection):
+
+            category = self.data_info.aug_category.category[idx]
+
+            show_category = self.data_info.aug_category.category if self.combo_category.get() == 'All' else [self.combo_category.get()]
+            if category not in show_category:
+                continue
+
+            for obj in cls_objs:  # objs example : [496.2, 334.8, 668.4, 425.1, 0.99] -> [xmin, ymin, xmax, ymax, confidence]
+                [score, box] = [round(obj[4], 2), obj[:4]]
+
+                if score >= self.threshold:
+                    if idx_counter == selected_idx:
+                        box = list(map(int, list(map(round, box))))
+                        xmin = max(box[0], 0)
+                        ymin = max(box[1], 0)
+                        xmax = min(box[2], self.img_width)
+                        ymax = min(box[3], self.img_height)
+
+                        if self.show_txt.get():
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+                            text = category + " : " + str(score)
+
+                            if ymax + 30 >= self.img_height:
+                                cv2.rectangle(img, (xmin, ymin), (xmin + len(text) * 9, int(ymin - 20)), (0, 0, 255), cv2.FILLED)
+                                cv2.putText(img, text, (xmin, int(ymin - 5)), font, 0.5, (255, 255, 255), 1)
+                            else:
+                                cv2.rectangle(img, (xmin, ymax), (xmin + len(text) * 9, int(ymax + 20)), (0, 0, 255), cv2.FILLED)
+                                cv2.putText(img, text, (xmin, int(ymax + 15)), font, 0.5, (255, 255, 255), 1)
+
+                        cv2.rectangle(img, (xmin, ymin), (xmax, ymax), args.det_box_color, 2)
+
+                        return img
+                    else:
+                        idx_counter += 1
+
+
+    def change_obj(self, event=None):
+        if len(self.listBox2.curselection()) == 0:
+            self.listBox1.focus()
+            return
+        else:
+            listBox2_idx = self.listBox2.curselection()[0]
+
+        self.listBox2_info.set("Detected Object : {:4}  / {:4}".format(listBox2_idx + 1, self.listBox2.size()))
+
+        name = self.listBox1.get(self.listBox1_idx)
+        img = self.data_info.get_img_by_name(name)
+        self.img_width, self.img_height = img.width, img.height
+        img = np.asarray(img)
+        self.img_name = name
+        self.img = img
+
+        if self.data_info.has_anno and self.show_gts.get():
+            objs = self.data_info.get_singleImg_gt(name)
+            img = self.draw_gt_boxes(img, objs)
+
+        if self.data_info.results is not None and self.show_dets.get():
+            dets = self.data_info.get_singleImg_dets(name)
+            img = self.draw_one_det_boxes(img, dets, listBox2_idx)
+
+        self.show_img = img
+        img = Image.fromarray(img)
+        img = self.scale_img(img)
+        self.photo = ImageTk.PhotoImage(img)
+        self.label_img.config(image=self.photo)
+        self.window.update_idletasks()
+
+        if self.img_name in os.listdir(self.output):
+            self.listBox1_label.config(bg='#CCFF99')
+        else:
+            self.listBox1_label.config(bg='yellow')
+
+    # ===============================================================
 
     def scale_img(self, img):
         [s_w, s_h] = [1, 1]
@@ -535,6 +621,13 @@ class vis_tool:
                 self.window.quit()
             elif event.keysym == 's':
                 self.save_img()
+
+            if event.keysym in ['KP_Enter', 'Return']:
+                self.listBox2.focus()
+                self.listBox2.select_set(0)
+            elif event.keysym == 'Escape':
+                self.change_img()
+                self.listBox1.focus()
 
 
     def combobox_change(self, event=None):
@@ -630,6 +723,8 @@ class vis_tool:
         self.clear_add_listBox1()
         self.listBox1.bind('<<ListboxSelect>>', self.change_img)
         self.listBox1.bind_all('<KeyRelease>', self.eventhandler)
+
+        self.listBox2.bind('<<ListboxSelect>>', self.change_obj)
 
         self.th_entry.bind('<Return>', self.change_threshold)
         self.th_entry.bind('<KP_Enter>', self.change_threshold)
