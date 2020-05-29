@@ -11,8 +11,6 @@ import matplotlib
 from tkinter import ttk
 import xml.etree.ElementTree as ET
 import argparse
-import pycocotools.mask as maskUtils
-import itertools
 
 matplotlib.use("TkAgg")
 
@@ -328,7 +326,7 @@ class vis_tool:
         self.combo_category.current(0)
 
         self.th_label = Label(self.window, font=('Arial', 11), bg='yellow', width=10, height=1, text="Threshold")
-        self.threshold = 0.5
+        self.threshold = np.float32(0.5)        # because np.float32(0.7) >= float(0.7) -> False
         self.th_entry = Entry(self.window, font=('Arial', 11), textvariable=StringVar(self.window, value=str(self.threshold)), width=10)
         self.th_button = Button(self.window, text='Enter', height=1, command=self.change_threshold)
 
@@ -353,7 +351,7 @@ class vis_tool:
     def change_threshold(self, event=None):
 
         try:
-            self.threshold = float(self.th_entry.get())
+            self.threshold = np.float32(self.th_entry.get())
             self.change_img()
 
             # after changing threshold, focus on listBox for easy control
