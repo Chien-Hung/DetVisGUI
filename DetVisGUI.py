@@ -347,6 +347,9 @@ class vis_tool:
 
         self.img_list = self.data_info.img_list
 
+        # flag for find/threshold button switch focused element
+        self.button_clicked = False
+
 
     def change_threshold(self, event=None):
 
@@ -359,6 +362,8 @@ class vis_tool:
                 self.listBox2.focus()
             else:
                 self.listBox1.focus()
+
+            self.button_clicked = True
 
         except ValueError:
             self.window.title("Please enter a number as score threshold.")
@@ -620,12 +625,15 @@ class vis_tool:
             elif event.keysym == 's':
                 self.save_img()
 
-            if event.keysym in ['KP_Enter', 'Return']:
-                self.listBox2.focus()
-                self.listBox2.select_set(0)
-            elif event.keysym == 'Escape':
-                self.change_img()
-                self.listBox1.focus()
+            if self.button_clicked:
+                self.button_clicked = False
+            else:
+                if event.keysym in ['KP_Enter', 'Return']:
+                    self.listBox2.focus()
+                    self.listBox2.select_set(0)
+                elif event.keysym == 'Escape':
+                    self.change_img()
+                    self.listBox1.focus()
 
 
     def combobox_change(self, event=None):
@@ -664,6 +672,7 @@ class vis_tool:
             self.img_list = new_list
             self.clear_add_listBox1()
             self.clear_add_listBox2()
+            self.button_clicked = True
         else:
             self.window.title("Can't find any image about '{}'".format(self.find_name))
 
