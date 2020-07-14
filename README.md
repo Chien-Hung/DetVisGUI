@@ -1,5 +1,4 @@
 # DetVisGUI
-<<<<<<< HEAD
 
 ## Introuction
 
