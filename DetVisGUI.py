@@ -11,6 +11,8 @@ import matplotlib
 from tkinter import ttk
 import xml.etree.ElementTree as ET
 import argparse
+import pycocotools.mask as maskUtils
+import itertools
 
 matplotlib.use("TkAgg")
 
@@ -20,11 +22,11 @@ parser = argparse.ArgumentParser(description="DetVisGUI")
 
 # dataset information
 parser.add_argument('-f', '--format', default='COCO', help='VOC or COCO dataset format')
-parser.add_argument('--img_root', default='data/COCO/test2017_small', help='data image path')
-parser.add_argument('--anno_root', default='data/COCO/image_info_test-dev2017_small.json', help='data annotation path')
-parser.add_argument('--det_file', default='data/COCO/coco_test_results.pkl', help='detection result file path')
-parser.add_argument('--no_gt', action='store_true', help='There are bounding box annotations in json file / Annotataions folder')
+parser.add_argument('--img_root', default='data/COCO/val2017', help='data image path')
+parser.add_argument('--anno_root', default='data/COCO/instances_val2017.json', help='data annotation path')
+parser.add_argument('--det_file', default='results/cascade_rcnn_r50_c4_1x/val_results.pkl', help='detection result file path')
 parser.add_argument('--txt', default='', help='VOC image list txt file')
+parser.add_argument('--no_gt', action='store_true', help='test images without groundtruth')
 
 parser.add_argument('-r', action='store_true', help='detection result format is (cls, img) or (img, cls)')
 parser.add_argument('--det_box_color', default=(255, 255, 0), help='detection box color')
@@ -43,6 +45,7 @@ class COCO_dataset:
         self.anno_root = args.anno_root
         self.det_file = args.det_file
         self.has_anno = not args.no_gt
+        self.mask = False
 
         # according json to get category, image list, and annotations.
         self.category, self.img_list, self.total_annotations = self.json_parser(self.anno_root, self.has_anno)
@@ -136,7 +139,6 @@ class COCO_dataset:
 
             print('\n==============[ {} json info ]=============='.format(self.dataset))
             print("Total Annotations: {}".format(len(annotations)))
-            print("Total Annotations: {}".format(len(annotations)))
             print("Total Image      : {}".format(len(images)))
             print("Annotated Image  : {}".format(len(total_annotations)))
             print("Total Category   : {}".format(len(category)))
@@ -155,17 +157,23 @@ class COCO_dataset:
             with open(det_file, 'rb') as f:
                 det_results = np.asarray(pickle.load(f))  # [(bg + cls), images]
 
-            # dim should be (class, image), mmdetection format: (image, class)
-            det_results = np.transpose(det_results, (1, 0))
-
-            if args.r:
+            if len(det_results.shape) == 2:
+                # dim should be (class, image), mmdetection format: (image, class)
                 det_results = np.transpose(det_results, (1, 0))
+                if args.r:
+                    det_results = np.transpose(det_results, (1, 0))
+            elif len(det_results.shape) == 3:
+                # dim should be (class, image, mask), mmdetection format: (image, mask, class)
+                det_results = np.transpose(det_results, (2, 0, 1))
+                if args.r:
+                    det_results = np.transpose(det_results, (1, 2, 0))
+                self.mask = True
 
             print("=======================================================================")
             print("CLASS NUMBER : ", det_results.shape[0])
             print("IMAGE NUMBER : ", det_results.shape[1])
             print("-----------------------------------------------------------------------")
-            print("pkl saved format would be different according to your detection code. ")
+            print("pkl saved format would be different according to your detection framework. ")
             print("If class number and image number are reverse, please add -r in command.")
             print("=======================================================================")
             return det_results
@@ -182,7 +190,11 @@ class COCO_dataset:
         return img
 
     def get_singleImg_gt(self, name):
-        return self.total_annotations[name.replace('.jpg', '')]
+        if name.replace('.jpg', '') not in self.total_annotations.keys():
+            print('There are no annotations in %s.' % name)
+            return []
+        else:
+            return self.total_annotations[name.replace('.jpg', '')]
 
     def get_singleImg_dets(self, name):
         return self.img_det[name]
@@ -196,6 +208,7 @@ class VOC_dataset:
         self.det_file = args.det_file
         self.txt = args.txt
         self.has_anno = not args.no_gt
+        self.mask = False
 
         self.data_root = self.anno_root.replace('/Annotations', '')
 
@@ -234,7 +247,7 @@ class VOC_dataset:
             print("CLASS NUMBER : ", det_results.shape[0])
             print("IMAGE NUMBER : ", det_results.shape[1])
             print("-----------------------------------------------------------------------")
-            print("pkl saved format would be different according to your detection code. ")
+            print("pkl saved format would be different according to your detection framework. ")
             print("If class number and image number are reverse, please add -r in command.")
             print("=======================================================================")
             return det_results
@@ -404,7 +417,6 @@ class vis_tool:
     def draw_all_det_boxes(self, img, single_detection):
 
         for idx, cls_objs in enumerate(single_detection):
-
             category = self.data_info.aug_category.category[idx]
 
             show_category = self.data_info.aug_category.category if self.combo_category.get() == 'All' else [self.combo_category.get()]
@@ -413,6 +425,59 @@ class vis_tool:
 
             for obj in cls_objs:  # objs example : [496.2, 334.8, 668.4, 425.1, 0.99] -> [xmin, ymin, xmax, ymax, confidence]
 
+                [score, box] = [round(obj[4], 2), obj[:4]]
+
+                if score >= self.threshold:
+                    box = list(map(int, list(map(round, box))))
+                    xmin = max(box[0], 0)
+                    ymin = max(box[1], 0)
+                    xmax = min(box[2], self.img_width)
+                    ymax = min(box[3], self.img_height)
+
+                    if self.show_txt.get():
+                        font = cv2.FONT_HERSHEY_SIMPLEX
+                        text = category + " : " + str(score)
+
+                        if ymax + 30 >= self.img_height:
+                            cv2.rectangle(img, (xmin, ymin), (xmin + len(text) * 9, int(ymin - 20)), (0, 0, 255), cv2.FILLED)
+                            cv2.putText(img, text, (xmin, int(ymin - 5)), font, 0.5, (255, 255, 255), 1)
+                        else:
+                            cv2.rectangle(img, (xmin, ymax), (xmin + len(text) * 9, int(ymax + 20)), (0, 0, 255), cv2.FILLED)
+                            cv2.putText(img, text, (xmin, int(ymax + 15)), font, 0.5, (255, 255, 255), 1)
+
+                    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), args.det_box_color, 2)
+
+        return img
+
+    def draw_all_det_boxes_masks(self, img, single_detection):
+        img = np.require(img, requirements=['W'])
+        boxes, masks = single_detection
+        
+        # draw segmentation masks  reference mmdetection/mmdet/models/detectors/base.py
+        if self.combo_category.get() != 'All':
+            show_idx = self.data_info.aug_category.category.index(self.combo_category.get())
+            masks = np.asarray([masks[show_idx]])
+            boxes = np.asarray([boxes[show_idx]])
+            category = self.data_info.aug_category.category[show_idx]   # fixed category
+
+        segms = list(itertools.chain(*masks))
+        bboxes = np.vstack(boxes)
+
+        inds = np.where(np.round(bboxes[:, -1], 2) >= self.threshold)[0]
+
+        self.color_list = []
+        for i in inds:
+            color_mask = np.random.randint(0, 256, (1, 3), dtype=np.uint8)
+            mask = maskUtils.decode(segms[i]).astype(np.bool)
+            img[mask] = img[mask] * 0.5 + color_mask * 0.5
+            self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
+
+        # draw bounding box
+        for idx, cls_objs in enumerate(boxes):
+            if self.combo_category.get() == 'All':
+                category = self.data_info.aug_category.category[idx]
+
+            for obj in cls_objs:  # objs example : [496.2, 334.8, 668.4, 425.1, 0.99] -> [xmin, ymin, xmax, ymax, confidence]
                 [score, box] = [round(obj[4], 2), obj[:4]]
 
                 if score >= self.threshold:
@@ -460,8 +525,13 @@ class vis_tool:
             img = self.draw_gt_boxes(img, objs)
 
         if self.data_info.results is not None and self.show_dets.get():
-            dets = self.data_info.get_singleImg_dets(name)
-            img = self.draw_all_det_boxes(img, dets)
+            if self.data_info.mask == False:
+                dets = self.data_info.get_singleImg_dets(name)
+                img = self.draw_all_det_boxes(img, dets)
+            else:
+                dets = self.data_info.get_singleImg_dets(name).transpose((1, 0))
+                img = self.draw_all_det_boxes_masks(img, dets)
+
             self.clear_add_listBox2()
 
         self.show_img = img
@@ -518,6 +588,67 @@ class vis_tool:
                         idx_counter += 1
 
 
+    def draw_one_det_boxes_masks(self, img, single_detection, selected_idx=-1):
+
+        img = np.require(img, requirements=['W'])
+        boxes, masks = single_detection
+
+        # draw segmentation masks   # reference mmdetection/mmdet/models/detectors/base.py
+        if self.combo_category.get() != 'All':
+            show_idx = self.data_info.aug_category.category.index(self.combo_category.get())
+            category = self.data_info.aug_category.category[show_idx]   # fixed category
+            masks = np.asarray([masks[show_idx]])
+            boxes = np.asarray([boxes[show_idx]])
+
+        segms = list(itertools.chain(*masks))
+        bboxes = np.vstack(boxes)
+
+        inds = np.where(np.round(bboxes[:, -1], 2) >= self.threshold)[0]
+
+        self.color_list = []
+        for inds_idx, i in enumerate(inds):
+            if inds_idx == selected_idx:
+                color_mask = np.random.randint(0, 256, (1, 3), dtype=np.uint8)
+                mask = maskUtils.decode(segms[i]).astype(np.bool)
+                img[mask] = img[mask] * 0.5 + color_mask * 0.5
+                self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
+
+        # draw bounding box
+        idx_counter = 0
+        for idx, cls_objs in enumerate(boxes):
+            if self.combo_category.get() == 'All':
+                category = self.data_info.aug_category.category[idx]
+
+            for obj_idx, obj in enumerate(cls_objs):  # objs example : [496.2, 334.8, 668.4, 425.1, 0.99] -> [xmin, ymin, xmax, ymax, confidence]
+                [score, box] = [round(obj[4], 2), obj[:4]]
+
+                if score >= self.threshold:
+                    if idx_counter == selected_idx:
+                        box = list(map(int, list(map(round, box))))
+                        xmin = max(box[0], 0)
+                        ymin = max(box[1], 0)
+                        xmax = min(box[2], self.img_width)
+                        ymax = min(box[3], self.img_height)
+
+                        if self.show_txt.get():
+                            font = cv2.FONT_HERSHEY_SIMPLEX
+                            text = category + " : " + str(score)
+
+                            if ymax + 30 >= self.img_height:
+                                cv2.rectangle(img, (xmin, ymin), (xmin + len(text) * 9, int(ymin - 20)), (0, 0, 255), cv2.FILLED)
+                                cv2.putText(img, text, (xmin, int(ymin - 5)), font, 0.5, (255, 255, 255), 1)
+                            else:
+                                cv2.rectangle(img, (xmin, ymax), (xmin + len(text) * 9, int(ymax + 20)), (0, 0, 255), cv2.FILLED)
+                                cv2.putText(img, text, (xmin, int(ymax + 15)), font, 0.5, (255, 255, 255), 1)
+
+                        cv2.rectangle(img, (xmin, ymin), (xmax, ymax), args.det_box_color, 2)
+
+                        return img
+                    else:
+                        idx_counter += 1
+
+
+
     def change_obj(self, event=None):
         if len(self.listBox2.curselection()) == 0:
             self.listBox1.focus()
@@ -539,8 +670,13 @@ class vis_tool:
             img = self.draw_gt_boxes(img, objs)
 
         if self.data_info.results is not None and self.show_dets.get():
-            dets = self.data_info.get_singleImg_dets(name)
-            img = self.draw_one_det_boxes(img, dets, listBox2_idx)
+
+            if self.data_info.mask == False:
+                dets = self.data_info.get_singleImg_dets(name)
+                img = self.draw_one_det_boxes(img, dets, listBox2_idx)
+            else:
+                dets = self.data_info.get_singleImg_dets(name).transpose((1, 0))
+                img = self.draw_one_det_boxes_masks(img, dets, listBox2_idx)
 
         self.show_img = img
         img = Image.fromarray(img)
@@ -557,6 +693,7 @@ class vis_tool:
     # ===============================================================
 
     def scale_img(self, img):
+
         [s_w, s_h] = [1, 1]
 
         # if window size is (1920, 1080), the default max image size is (1440, 810)
@@ -574,19 +711,27 @@ class vis_tool:
             s_h = fix_height / img.height
 
         scale = min(s_w, s_h)
+
         img = img.resize((int(img.width * scale), int(img.height * scale)), Image.ANTIALIAS)
         return img
 
     def clear_add_listBox2(self):  # object listBox
         self.listBox2.delete(0, 'end')
 
-        single_detection = self.data_info.get_singleImg_dets(self.img_list[self.listBox1_idx])
-
+        if self.data_info.mask == False:
+            single_detection = self.data_info.get_singleImg_dets(self.img_list[self.listBox1_idx])
+        else:
+            single_detection, single_mask = self.data_info.get_singleImg_dets(self.img_list[self.listBox1_idx]).transpose((1,0))
+        
+        show_category = self.data_info.aug_category.category if self.combo_category.get() == 'All' else [self.combo_category.get()]
         num = 0
 
         for idx, cls_objs in enumerate(single_detection):
-
             category = self.data_info.aug_category.category[idx]
+            
+            if category not in show_category:
+                continue
+
             for obj in cls_objs:  # objs example : [496.2, 334.8, 668.4, 425.1, 0.99] -> [xmin, ymin, xmax, ymax, confidence]
                 score = round(obj[4], 2)
                 if score >= self.threshold:

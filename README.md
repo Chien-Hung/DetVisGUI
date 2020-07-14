@@ -6,12 +6,13 @@ This is a lightweight GUI for visualizing the results of deep learning object de
 
 DetVisGUI supports **Pascal VOC** and **COCO** formats. 
 
-![alt tag](./demo/demo2.gif)
+[![alt tag](./demo/demo.gif)]()
 
 ## Dependencies
 - numpy
 - matplotlib
 - cv2
+- cocoapi
 
 ## Demo
 
@@ -34,45 +35,44 @@ Optional Arguments:
 - `SAVE_DIRECTORY`: The directory for saving display images.
 - `--no_gt`: If there are no annotations according to display images (test images), add --no_gt.
 
-
-**Display Pascal VOC training results:** 
-
-```
-$ python DetVisGUI.py --format VOC \
-  --img_root data/VOCdevkit_small/VOC2007/JPEGImages \
-  --anno_root data/VOCdevkit_small/VOC2007/Annotations \
-  --txt data/VOCdevkit_small/VOC2007/ImageSets/Main/train.txt \
-  --det_file results/voc_train_results.pkl
-```
-
-**Display Pascal VOC test results (no groundtruth):**
-
-```
-$ python DetVisGUI.py --format VOC \
-  --img_root data/VOCdevkit_small/VOC2007/JPEGImages \
-  --anno_root data/VOCdevkit_small/VOC2007/Annotations \
-  --txt data/VOCdevkit_small/VOC2007/ImageSets/Main/test.txt \
-  --det_file results/voc_test_results.pkl \
-  --no_gt
-```
-
 **Display COCO validation results:** 
 
 ```
 $ python DetVisGUI.py --format COCO \
-  --img_root data/COCO_small/val2017 \
-  --anno_root data/COCO_small/instances_val2017.json \
-  --det_file results/coco_val_results.pkl 
+      --img_root data/COCO/val2017 \
+      --anno_root data/COCO/instances_val2017.json \
+      --det_file results/mask_rcnn_r50_fpn_1x/val_results.pkl 
 ```
 
 **Display COCO test results (no groundtruth):**
 
 ```
 $ python DetVisGUI.py --format COCO \
-  --img_root data/COCO_small/test2017 \
-  --anno_root data/COCO_small/image_info_test-dev2017.json \
-  --det_file results/coco_test_results.pkl \
-  --no_gt
+      --img_root data/COCO/test2017 \
+      --anno_root data/COCO/image_info_test-dev2017.json \
+      --det_file results/mask_rcnn_r50_fpn_1x/test_results.pkl \
+      --no_gt
+```
+
+**Display Pascal VOC training results:** 
+
+```
+$ python DetVisGUI.py --format VOC \
+      --img_root data/VOCdevkit/VOC2007/JPEGImages \
+      --anno_root data/VOCdevkit/VOC2007/Annotations \
+      --txt data/VOCdevkit/VOC2007/ImageSets/Main/train.txt \
+      --det_file results/ssd512_voc/train_results.pkl
+```
+
+**Display Pascal VOC test results (no groundtruth):**
+
+```
+$ python DetVisGUI.py --format VOC \
+      --img_root data/VOCdevkit/VOC2007/JPEGImages \
+      --anno_root data/VOCdevkit/VOC2007/Annotations \
+      --txt data/VOCdevkit/VOC2007/ImageSets/Main/test.txt \
+      --det_file results/ssd512_voc/test_results.pkl \
+      --no_gt
 ```
 
 ---
