@@ -1,5 +1,4 @@
 # DetVisGUI
-<<<<<<< HEAD
 
 ## Introuction
 
@@ -87,6 +86,3 @@ $ python DetVisGUI.py --format VOC \
 |     s     | save displayed image in output folder.     |
 |     q     | colse this GUI.                            |
 
-=======
-This is a GUI for easily visualizing detection results . 
->>>>>>> b349d0423be1f244df483d5ae23d50c15a1ea53b
