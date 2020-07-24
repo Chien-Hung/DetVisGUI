@@ -28,8 +28,8 @@ Arguments:
 
 Optional Arguments:
 
-- `SAVE_DIRECTORY`: The directory for saving display images.
-- `STAGE`: The stage [train / val / test] of the result file, default is val.
+- `SAVE_DIRECTORY`: The directory for saving display images, default is 'output'.
+- `STAGE`: The stage [train / val / test] of the result file, default is 'val'.
 
 
 **Display the validation results of COCO segmentation:** 

@@ -393,6 +393,7 @@ class vis_tool:
         # ====== ohter attribute ======
         self.img_name = ''
         self.show_img = None
+
         self.output = self.args.output
 
         if not os.path.isdir(self.output):
