@@ -4,18 +4,18 @@
 
 This is a lightweight GUI for visualizing the [mmdetection](https://github.com/open-mmlab/mmdetection) results. It could display detection results with **different threshold dynamically**, and would be convenient for verifying detection results and groundtruth. 
 
-DetVisGUI supports **Pascal VOC** and **COCO** formats. 
 
-**The command in the gif and youtube is for the master branch. Please reference the following command example.**
+**The command in the gif and youtube is for the master branch. Please reference the following example.**
 [![alt tag](./demo/demo.gif)](https://www.youtube.com/watch?v=4imQyECTik0)
 
 
 ## Dependencies
 -- mmdetection
 
+
 ## Demo
 
-I sample a small part of COCO and VOC2007 dataset, running mmdetection for getting detection result(\*.pkl) and use these files for demo. There is not any information about image and annotation in the detection result(\*.pkl), so I link the image, annotation, [image list text file(VOC)] and detection result(\*.pkl) by arguments.
+I sample a small part of COCO and VOC2007 dataset, running mmdetection for getting detection result(\*.pkl) and use these files for demo.
 
 ```
 python DetVisGUI.py ${CONFIG_FILE} ${RESULT_FILE} [--stage ${STAGE}] [--output ${SAVE_DIRECTORY}]
@@ -28,14 +28,14 @@ Arguments:
 
 Optional Arguments:
 
-- `SAVE_DIRECTORY`: The directory for saving display images, default is 'output'.
 - `STAGE`: The stage [train / val / test] of the result file, default is 'val'.
+- `SAVE_DIRECTORY`: The directory for saving display images, default is 'output'.
 
 
 **Display the validation results of COCO segmentation:** 
 
 ```
-$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py results/mask_rcnn_r50_fpn_1x/val_results.pkl --stage val
+$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py results/mask_rcnn_r50_fpn_1x/val_results.pkl
 ```
 
 **Display the test results of COCO segmentation(no groundtruth):**
@@ -47,7 +47,7 @@ $ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py results/mask_rcnn_r50_fpn_
 **Display the validation results of COCO detection:** 
 
 ```
-$ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py results/cascade_rcnn_r50_c4_1x/val_results.pkl --stage val
+$ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py results/cascade_rcnn_r50_c4_1x/val_results.pkl
 ```
 
 **Display the test results of COCO detection(no groundtruth):**
