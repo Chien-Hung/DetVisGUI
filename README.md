@@ -8,6 +8,8 @@ DetVisGUI supports **Pascal VOC** and **COCO** formats.
 
 [![alt tag](./demo/demo.gif)](https://www.youtube.com/watch?v=4imQyECTik0)
 
+Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
+
 ## Dependencies
 - numpy
 - matplotlib
