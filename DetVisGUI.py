@@ -301,8 +301,8 @@ class vis_tool:
         self.info = StringVar()
         self.info_label = Label(self.window, bg='yellow', width=4, textvariable=self.info)
 
-        self.listBox1 = Listbox(self.window, width=50, height=20, font=('Times New Roman', 10))
-        self.listBox2 = Listbox(self.window, width=50, font=('Times New Roman', 10))
+        self.listBox1 = Listbox(self.window, width=50, height=25, font=('Times New Roman', 10))
+        self.listBox2 = Listbox(self.window, width=50, height=12, font=('Times New Roman', 10))
 
         self.scrollbar1 = Scrollbar(self.window, width=15, orient="vertical")
         self.scrollbar2 = Scrollbar(self.window, width=15, orient="vertical")
@@ -705,7 +705,8 @@ class vis_tool:
         # change image size according to window size
         if self.window.winfo_width() != 1:
             fix_width = (self.window.winfo_width() - self.listBox1.winfo_width() - self.scrollbar1.winfo_width() - 5)
-            fix_height = int(fix_width * 9 / 16)
+            # fix_height = int(fix_width * 9 / 16)
+            fix_height = 750
 
         # handle image size is too big
         if img.width > fix_width:
