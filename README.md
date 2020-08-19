@@ -14,10 +14,21 @@ Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 ## Dependencies
 -- mmdetection
 
+## Code
+
+Clone this repository.
+
+```
+git clone -b mmdetection git@github.com:Chien-Hung/DetVisGUI.git
+cd DetVisGUI
+```
 
 ## Demo
 
 I sample a small part of COCO and VOC2007 dataset, running mmdetection for getting detection result(\*.pkl) and use these files for demo.
+
+Clone the repository.
+
 
 ```
 python DetVisGUI.py ${CONFIG_FILE} ${RESULT_FILE} [--stage ${STAGE}] [--output ${SAVE_DIRECTORY}]
