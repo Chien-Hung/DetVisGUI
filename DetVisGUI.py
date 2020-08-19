@@ -406,7 +406,7 @@ class vis_tool:
             self.button_clicked = True
 
         except ValueError:
-            self.window.title("Please enter a number as score threshold.")
+            self.window.title("Please enter a number as IoU threshold.")
 
 
     # draw groundtruth
