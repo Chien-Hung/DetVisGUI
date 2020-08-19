@@ -16,6 +16,16 @@ Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 - cv2
 - cocoapi
 
+
+## Code
+
+Clone this repository.
+
+```
+git clone git@github.com:Chien-Hung/DetVisGUI.git
+cd DetVisGUI
+```
+
 ## Demo
 
 I sample a small part of COCO and VOC2007 dataset, running mmdetection for getting detection result(\*.pkl) and use these files for demo. There is not any information about image and annotation in the detection result(\*.pkl), so I link the image, annotation, [image list text file(VOC)] and detection result(\*.pkl) by arguments.
