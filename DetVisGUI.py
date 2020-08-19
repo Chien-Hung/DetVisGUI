@@ -278,9 +278,9 @@ class vis_tool:
             self.window, bg='yellow', width=4, textvariable=self.info)
 
         self.listBox_img = Listbox(
-            self.window, width=50, height=20, font=('Times New Roman', 10))
+            self.window, width=50, height=25, font=('Times New Roman', 10))
         self.listBox_obj = Listbox(
-            self.window, width=50, font=('Times New Roman', 10))
+            self.window, width=50, height=12, font=('Times New Roman', 10))
 
         self.scrollbar_img = Scrollbar(
             self.window, width=15, orient='vertical')
@@ -804,7 +804,8 @@ class vis_tool:
             fix_width = (
                 self.window.winfo_width() - self.listBox_img.winfo_width() -
                 self.scrollbar_img.winfo_width() - 5)
-            fix_height = int(fix_width * 9 / 16)
+            # fix_height = int(fix_width * 9 / 16)
+            fix_height = 750
 
         # handle image size is too big
         if img.width > fix_width:
