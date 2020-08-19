@@ -85,6 +85,7 @@ $ python DetVisGUI.py --format VOC \
 |:----------:|-------------------------------------------|
 |   ↑ , ↓    | change image.                              |
 |   ← , →    | change score threshold.                    | 
+| ctrl +  ← , →    | change IoU threshold.                    | 
 |     s     | save displayed image in output folder.     |
 |     q     | colse this GUI.                            |
 
