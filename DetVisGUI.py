@@ -317,13 +317,14 @@ class vis_tool:
         self.photo = ImageTk.PhotoImage(self.img)
         self.label_img = Label(self.window, image=self.photo)
 
-        self.show_txt = IntVar(value=1)
-        self.checkbn_txt = Checkbutton(
+        self.show_det_txt = IntVar(value=1)
+        self.checkbn_det_txt = Checkbutton(
             self.window,
-            text='LabelText',
+            text='Text',
             font=('Arial', 10, 'bold'),
-            variable=self.show_txt,
-            command=self.change_img)
+            variable=self.show_det_txt,
+            command=self.change_img,
+            fg='#0000FF')
 
         self.show_dets = IntVar(value=1)
         self.checkbn_det = Checkbutton(
@@ -333,6 +334,15 @@ class vis_tool:
             variable=self.show_dets,
             command=self.change_img,
             fg='#0000FF')
+
+        self.show_gt_txt = IntVar(value=1)
+        self.checkbn_gt_txt = Checkbutton(
+            self.window,
+            text='Text',
+            font=('Arial', 10, 'bold'),
+            variable=self.show_gt_txt,
+            command=self.change_img,
+            fg='#FF8C00')
 
         self.show_gts = IntVar(value=1)
         self.checkbn_gt = Checkbutton(
@@ -442,7 +452,7 @@ class vis_tool:
 
             font = cv2.FONT_HERSHEY_SIMPLEX
 
-            if self.show_txt.get():
+            if self.show_gt_txt.get():
                 if ymax + 30 >= self.img_height:
                     cv2.rectangle(img, (xmin, ymin),
                                   (xmin + len(cls_name) * 10, int(ymin - 20)),
@@ -483,7 +493,7 @@ class vis_tool:
                     xmax = min(box[2], self.img_width)
                     ymax = min(box[3], self.img_height)
 
-                    if self.show_txt.get():
+                    if self.show_det_txt.get():
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         text = category + ' : ' + str(score)
 
@@ -547,7 +557,7 @@ class vis_tool:
                     xmax = min(box[2], self.img_width)
                     ymax = min(box[3], self.img_height)
 
-                    if self.show_txt.get():
+                    if self.show_det_txt.get():
                         font = cv2.FONT_HERSHEY_SIMPLEX
                         text = category + ' : ' + str(score)
 
@@ -640,7 +650,7 @@ class vis_tool:
                         xmax = min(box[2], self.img_width)
                         ymax = min(box[3], self.img_height)
 
-                        if self.show_txt.get():
+                        if self.show_det_txt.get():
                             font = cv2.FONT_HERSHEY_SIMPLEX
                             text = category + ' : ' + str(score)
 
@@ -710,7 +720,7 @@ class vis_tool:
                         xmax = min(box[2], self.img_width)
                         ymax = min(box[3], self.img_height)
 
-                        if self.show_txt.get():
+                        if self.show_det_txt.get():
                             font = cv2.FONT_HERSHEY_SIMPLEX
                             text = category + ' : ' + str(score)
 
@@ -949,7 +959,7 @@ class vis_tool:
             pady=3,
             columnspan=6)
 
-        # show label
+        # show det
         self.checkbn_det.grid(
             row=layer1 + 40,
             column=0,
@@ -957,22 +967,31 @@ class vis_tool:
             padx=3,
             pady=3,
             columnspan=4)
-        # show gt
-        self.checkbn_gt.grid(
+        # show det text
+        self.checkbn_det_txt.grid(
             row=layer1 + 40,
             column=4,
             sticky=N + S,
             padx=3,
             pady=3,
-            columnspan=4)
-        # show det
-        self.checkbn_txt.grid(
-            row=layer1 + 40,
-            column=8,
-            sticky=N + S,
-            padx=3,
-            pady=3,
-            columnspan=4)
+            columnspan=2)
+        if self.data_info.has_anno != False:
+            # show gt
+            self.checkbn_gt.grid(
+                row=layer1 + 40,
+                column=6,
+                sticky=N + S,
+                padx=3,
+                pady=3,
+                columnspan=4)
+            # show gt text
+            self.checkbn_gt_txt.grid(
+                row=layer1 + 40,
+                column=10,
+                sticky=N + S,
+                padx=3,
+                pady=3,
+                columnspan=2)
 
         # ======================= layer 2 =========================
 
