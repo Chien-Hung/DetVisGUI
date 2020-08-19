@@ -297,13 +297,21 @@ class vis_tool:
             textvariable=self.listBox_img_info)
 
         self.listBox_obj_info = StringVar()
-        self.listBox_obj_label = Label(
+        self.listBox_obj_label1 = Label(
             self.window,
             font=('Arial', 11),
             bg='yellow',
             width=4,
             height=1,
             textvariable=self.listBox_obj_info)
+        self.listBox_obj_label2 = Label(
+            self.window,
+            font=('Arial', 11),
+            bg='yellow',
+            width=4,
+            height=1,
+            text='Object Class : Score (IoU)')
+
 
         if cfg.dataset_type == 'VOCDataset':
             self.data_info = VOC_dataset(cfg, self.args)
@@ -372,7 +380,7 @@ class vis_tool:
             bg='yellow',
             width=10,
             height=1,
-            text='Threshold')
+            text='Score Threshold')
         self.threshold = np.float32(0.5)
         self.th_entry = Entry(
             self.window,
@@ -381,6 +389,22 @@ class vis_tool:
             textvariable=StringVar(self.window, value=str(self.threshold)))
         self.th_button = Button(
             self.window, text='Enter', height=1, command=self.change_threshold)
+
+        self.iou_th_label = Label(
+            self.window,
+            font=('Arial', 11),
+            bg='yellow',
+            width=10,
+            height=1,
+            text='IoU Threshold')
+        self.iou_threshold = np.float32(0.5)
+        self.iou_th_entry = Entry(
+            self.window,
+            font=('Arial', 11),
+            width=10,
+            textvariable=StringVar(self.window, value=str(self.iou_threshold)))
+        self.iou_th_button = Button(
+            self.window, text='Enter', height=1, command=self.change_iou_threshold)
 
         self.find_label = Label(
             self.window,
@@ -430,6 +454,23 @@ class vis_tool:
         except ValueError:
             self.window.title('Please enter a number as score threshold.')
 
+    def change_iou_threshold(self, event=None):
+
+        try:
+            self.iou_threshold = np.float32(self.iou_th_entry.get())
+            self.change_img()
+
+            # after changing threshold, focus on listBox for easy control
+            if self.window.focus_get() == self.listBox_obj:
+                self.listBox_obj.focus()
+            else:
+                self.listBox_img.focus()
+
+            self.button_clicked = True
+
+        except ValueError:
+            self.window.title("Please enter a number as IoU threshold.")
+
     # draw groundtruth
     def draw_gt_boxes(self, img, objs):
         for obj in objs:
@@ -471,7 +512,74 @@ class vis_tool:
 
         return img
 
+
+    def get_iou(self, det):
+
+        iou = np.zeros_like(det)
+        GT = self.data_info.get_singleImg_gt(self.img_name)
+        
+        for idx, cls_objs in enumerate(det):
+
+            category = self.data_info.aug_category.category[idx]
+            BBGT = []
+            for t in GT:
+                if not t[0] == category: continue
+                BBGT.append([t[1], t[2], t[1] + t[3], t[2] + t[4]])
+            BBGT = np.asarray(BBGT)
+            d = [0] * len(BBGT)  # for check 1 GT map to several det
+
+            confidence = cls_objs[:, 4]
+            BB = cls_objs[:, 0:4]   # bounding box        
+             
+            # sort by confidence
+            sorted_ind = np.argsort(-confidence)
+            sorted_scores = np.sort(-confidence)
+            BB = BB[sorted_ind, :]
+
+            # for returning original order
+            ind_table = {i: sorted_ind[i] for i in range(len(sorted_ind))}  
+
+            iou[idx] = np.zeros(len(BB))
+
+            if len(BBGT) > 0:
+                for i in range(len(BB)): 
+                    bb = BB[i, :]
+            
+                    # compute overlaps
+                    # intersection
+                    ixmin = np.maximum(BBGT[:, 0], bb[0])
+                    iymin = np.maximum(BBGT[:, 1], bb[1])
+                    ixmax = np.minimum(BBGT[:, 2], bb[2])
+                    iymax = np.minimum(BBGT[:, 3], bb[3])
+                    iw = np.maximum(ixmax - ixmin + 1., 0.)
+                    ih = np.maximum(iymax - iymin + 1., 0.)
+                    inters = iw * ih
+    
+                    # union
+                    uni = ((bb[2] - bb[0] + 1.) * (bb[3] - bb[1] + 1.) +
+                           (BBGT[:, 2] - BBGT[:, 0] + 1.) * (BBGT[:, 3] - BBGT[:, 1] + 1.) - 
+                            inters)
+
+                    overlaps = inters / uni
+                    ovmax = np.max(overlaps) # max overlaps with all gt
+                    jmax = np.argmax(overlaps)        
+                    
+                    if ovmax > self.iou_threshold:        
+                        if not d[jmax]:
+                            d[jmax] = 1
+                        else: # multiple bounding boxes map to one gt
+                            ovmax = -ovmax
+
+                    iou[idx][ind_table[i]] = ovmax # return to unsorted order
+        return iou
+
+
+
     def draw_all_det_boxes(self, img, single_detection):
+
+        if self.data_info.has_anno:
+            self.iou = self.get_iou(single_detection)
+
         for idx, cls_objs in enumerate(single_detection):
             category = self.data_info.aug_category.category[idx]
 
@@ -483,7 +591,7 @@ class vis_tool:
             if category not in show_category:
                 continue
 
-            for obj in cls_objs:
+            for obj_idx, obj in enumerate(cls_objs):
                 [score, box] = [round(obj[4], 2), obj[:4]]
 
                 if score >= self.threshold:
@@ -492,6 +600,12 @@ class vis_tool:
                     ymin = max(box[1], 0)
                     xmax = min(box[2], self.img_width)
                     ymax = min(box[3], self.img_height)
+
+                    if not self.data_info.has_anno or \
+                        self.iou[idx][obj_idx] >= self.iou_threshold:
+                        color = self.args.det_box_color
+                    else: 
+                        color = (255, 0, 0)
 
                     if self.show_det_txt.get():
                         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -512,8 +626,7 @@ class vis_tool:
                             cv2.putText(img, text, (xmin, int(ymax + 15)),
                                         font, 0.5, (255, 255, 255), 1)
 
-                    cv2.rectangle(img, (xmin, ymin), (xmax, ymax),
-                                  self.args.det_box_color, 2)
+                    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
 
         return img
 
@@ -542,12 +655,15 @@ class vis_tool:
             img[mask] = img[mask] * 0.5 + color_mask * 0.5
             self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
 
+        if self.data_info.has_anno:
+            self.iou = self.get_iou(boxes)
+
         # draw bounding box
         for idx, cls_objs in enumerate(boxes):
             if self.combo_category.get() == 'All':
                 category = self.data_info.aug_category.category[idx]
 
-            for obj in cls_objs:
+            for obj_idx, obj in enumerate(cls_objs):
                 [score, box] = [round(obj[4], 2), obj[:4]]
 
                 if score >= self.threshold:
@@ -556,6 +672,12 @@ class vis_tool:
                     ymin = max(box[1], 0)
                     xmax = min(box[2], self.img_width)
                     ymax = min(box[3], self.img_height)
+
+                    if not self.data_info.has_anno or \
+                        self.iou[idx][obj_idx] >= self.iou_threshold:
+                        color = self.args.det_box_color
+                    else: 
+                        color = (255, 0, 0)
 
                     if self.show_det_txt.get():
                         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -576,8 +698,7 @@ class vis_tool:
                             cv2.putText(img, text, (xmin, int(ymax + 15)),
                                         font, 0.5, (255, 255, 255), 1)
 
-                    cv2.rectangle(img, (xmin, ymin), (xmax, ymax),
-                                  self.args.det_box_color, 2)
+                    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
 
         return img
 
@@ -639,7 +760,7 @@ class vis_tool:
             if category not in show_category:
                 continue
 
-            for obj in cls_objs:
+            for obj_idx, obj in enumerate(cls_objs):
                 [score, box] = [round(obj[4], 2), obj[:4]]
 
                 if score >= self.threshold:
@@ -649,6 +770,12 @@ class vis_tool:
                         ymin = max(box[1], 0)
                         xmax = min(box[2], self.img_width)
                         ymax = min(box[3], self.img_height)
+
+                        if not self.data_info.has_anno or \
+                            self.iou[idx][obj_idx] >= self.iou_threshold:
+                            color = self.args.det_box_color
+                        else: 
+                            color = (255, 0, 0)
 
                         if self.show_det_txt.get():
                             font = cv2.FONT_HERSHEY_SIMPLEX
@@ -669,8 +796,7 @@ class vis_tool:
                                 cv2.putText(img, text, (xmin, int(ymax + 15)),
                                             font, 0.5, (255, 255, 255), 1)
 
-                        cv2.rectangle(img, (xmin, ymin), (xmax, ymax),
-                                      self.args.det_box_color, 2)
+                        cv2.rectangle(img, (xmin, ymin), (xmax, ymax), color, 2)
 
                         return img
                     else:
@@ -720,6 +846,12 @@ class vis_tool:
                         xmax = min(box[2], self.img_width)
                         ymax = min(box[3], self.img_height)
 
+                        if not self.data_info.has_anno or \
+                            self.iou[idx][obj_idx] >= self.iou_threshold:
+                            color = self.args.det_box_color
+                        else: 
+                            color = (255, 0, 0)
+
                         if self.show_det_txt.get():
                             font = cv2.FONT_HERSHEY_SIMPLEX
                             text = category + ' : ' + str(score)
@@ -740,7 +872,7 @@ class vis_tool:
                                             font, 0.5, (255, 255, 255), 1)
 
                         cv2.rectangle(img, (xmin, ymin), (xmax, ymax),
-                                      self.args.det_box_color, 2)
+                                      color, 2)
 
                         return img
                     else:
@@ -840,11 +972,23 @@ class vis_tool:
             if category not in show_category:
                 continue
 
-            for obj in cls_objs:
+            for obj_idx, obj in enumerate(cls_objs):
                 score = np.round(obj[4], 2)
                 if score >= self.threshold:
-                    self.listBox_obj.insert('end',
-                                            category + ' : ' + str(score))
+                    if not self.data_info.has_anno:
+                        self.listBox_obj.insert('end', 
+                                                category + " : " + str(score))
+                    elif self.iou[idx][obj_idx] > self.iou_threshold:
+                        s = "{:15} : {:5.3} ( {:<6.3})".format(
+                            category, score, abs(round(self.iou[idx][obj_idx], 2)))
+                        self.listBox_obj.insert('end', s)
+                        self.listBox_obj.itemconfig(num, fg="green")
+                    else:
+                        s = "{:15} : {:5.3} ( {:<6.3})".format(
+                            category, score, abs(round(self.iou[idx][obj_idx], 2)))
+                        self.listBox_obj.insert('end', s)
+                        self.listBox_obj.itemconfig(num, fg="red")
+
                     num += 1
 
         self.listBox_obj_info.set('Detected Object : {:3}'.format(num))
@@ -861,6 +1005,19 @@ class vis_tool:
         self.th_entry.insert(0, str(round(self.threshold, 2)))
         self.change_threshold()
 
+    def change_iou_threshold_button(self, v):
+        self.iou_threshold += v
+
+        if self.iou_threshold <= 0:
+            self.iou_threshold = 0
+        elif self.iou_threshold >= 1:
+            self.iou_threshold = 1
+
+        self.iou_th_entry.delete(0, END)
+        self.iou_th_entry.insert(0, str(round(self.iou_threshold, 2)))
+        self.change_iou_threshold()
+
+
     def save_img(self):
         print('Save image to ' + os.path.join(self.output, self.img_name))
         cv2.imwrite(
@@ -869,11 +1026,17 @@ class vis_tool:
         self.listBox_img_label.config(bg='#CCFF99')
 
     def eventhandler(self, event):
-        if self.window.focus_get() not in [self.find_entry, self.th_entry]:
-            if event.keysym == 'Right':
-                self.change_threshold_button(0.1)
-            elif event.keysym == 'Left':
+        entry_list = [self.find_entry, self.th_entry, self.iou_th_entry]
+        if self.window.focus_get() not in entry_list:
+            if event.state == 20 and event.keysym == 'Left':
+                self.change_iou_threshold_button(-0.1)
+            elif event.state == 20 and event.keysym == 'Right':
+                self.change_iou_threshold_button(0.1) 
+
+            elif event.state == 16 and event.keysym == 'Left':
                 self.change_threshold_button(-0.1)
+            elif event.state == 16 and event.keysym == 'Right':
+                self.change_threshold_button(0.1)
             elif event.keysym == 'q':
                 self.window.quit()
             elif event.keysym == 's':
@@ -1024,19 +1187,35 @@ class vis_tool:
 
         if self.data_info.det_file != '':
             self.th_label.grid(
-                row=layer2 + 40, column=0, sticky=E + W, columnspan=4)
+                row=layer2 + 40, column=0, sticky=E + W, columnspan=6)
             self.th_entry.grid(
-                row=layer2 + 40, column=4, sticky=E + W, columnspan=4)
+                row=layer2 + 40, column=6, sticky=E + W, columnspan=3)
             self.th_button.grid(
-                row=layer2 + 40, column=8, sticky=E + W, pady=3, columnspan=4)
+                row=layer2 + 40, column=9, sticky=E + W, columnspan=3)
 
-            self.listBox_obj_label.grid(
-                row=layer2 + 50, column=0, sticky=E + W, pady=3, columnspan=12)
+            if self.data_info.has_anno != False:
+                self.iou_th_label.grid(
+                    row=layer2 + 50, column=0, sticky=E + W, columnspan=6)
+                self.iou_th_entry.grid(
+                    row=layer2 + 50, column=6, sticky=E + W, columnspan=3)
+                self.iou_th_button.grid(
+                    row=layer2 + 50, column=9, sticky=E + W, columnspan=3)
+
+            self.listBox_obj_label1.grid(
+                row=layer2 + 60, column=0, sticky=E + W, pady=3, columnspan=12)
+
+            if self.data_info.has_anno != False:
+                self.listBox_obj_label2.grid(
+                    row=layer2 + 70, 
+                    column=0, 
+                    sticky=E + W, 
+                    pady=2, 
+                    columnspan=12)
 
             self.scrollbar_obj.grid(
-                row=layer2 + 60, column=11, sticky=N + S + W, pady=3)
+                row=layer2 + 80, column=11, sticky=N + S + W, pady=3)
             self.listBox_obj.grid(
-                row=layer2 + 60,
+                row=layer2 + 80,
                 column=0,
                 sticky=N + S + E + W,
                 pady=3,
@@ -1050,6 +1229,8 @@ class vis_tool:
 
         self.th_entry.bind('<Return>', self.change_threshold)
         self.th_entry.bind('<KP_Enter>', self.change_threshold)
+        self.iou_th_entry.bind('<Return>', self.change_iou_threshold)
+        self.iou_th_entry.bind('<KP_Enter>', self.change_iou_threshold)
         self.find_entry.bind('<Return>', self.findname)
         self.find_entry.bind('<KP_Enter>', self.findname)
 
