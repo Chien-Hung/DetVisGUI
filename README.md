@@ -6,7 +6,7 @@ This is a lightweight GUI for visualizing the results of deep learning object de
 
 DetVisGUI supports **Pascal VOC** and **COCO** formats. 
 
-[![alt tag](./demo/demo.gif)](https://www.youtube.com/watch?v=4imQyECTik0)
+[![alt tag](./demo/demo.png)](https://www.youtube.com/watch?v=4imQyECTik0)
 
 Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 
