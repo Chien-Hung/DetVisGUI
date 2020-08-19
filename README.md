@@ -6,7 +6,7 @@ This is a lightweight GUI for visualizing the [mmdetection](https://github.com/o
 
 
 **The command in the gif and youtube is for the master branch. Please reference the following example.**
-[![alt tag](./demo/demo.gif)](https://www.youtube.com/watch?v=4imQyECTik0)
+[![alt tag](./demo/demo.png)](https://www.youtube.com/watch?v=4imQyECTik0)
 
 Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 
@@ -72,6 +72,7 @@ $ python DetVisGUI.py configs/ssd512_voc.py results/ssd512_voc/test_results.pkl 
 |:----------:|-------------------------------------------|
 |   ↑ , ↓    | change image.                              |
 |   ← , →    | change score threshold.                    | 
+| ctrl +  ← , →    | change IoU threshold.                    | 
 |     s     | save displayed image in output folder.     |
 |     q     | colse this GUI.                            |
 
