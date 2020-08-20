@@ -17,7 +17,7 @@ Video with text description : https://www.youtube.com/watch?v=4imQyECTik0 (**The
 Clone this repository.
 
 ```
-git clone -b mmdetection git@github.com:Chien-Hung/DetVisGUI.git
+git clone -b mmdetection https://github.com/Chien-Hung/DetVisGUI.git
 cd DetVisGUI
 ```
 
