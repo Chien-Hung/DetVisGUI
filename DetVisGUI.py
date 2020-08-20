@@ -11,6 +11,7 @@ import matplotlib
 from tkinter import ttk
 import xml.etree.ElementTree as ET
 import argparse
+import platform
 import pycocotools.mask as maskUtils
 import itertools
 
