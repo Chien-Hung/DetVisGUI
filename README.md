@@ -22,7 +22,7 @@ Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 Clone this repository.
 
 ```
-git clone git@github.com:Chien-Hung/DetVisGUI.git
+git clone https://github.com/Chien-Hung/DetVisGUI.git
 cd DetVisGUI
 ```
 
