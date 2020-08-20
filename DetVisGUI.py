@@ -13,6 +13,7 @@ import cv2
 import matplotlib
 import mmcv
 import numpy as np
+import platform
 import pycocotools.mask as maskUtils
 from PIL import Image, ImageTk
 
@@ -143,7 +144,7 @@ class COCO_dataset:
         if det_file != '':
             with open(det_file, 'rb') as f:
                 det_results = np.asarray(
-                    pickle.load(f))  # [(bg + cls), images]
+                    pickle.load(f), dtype=object)  # [(bg + cls), images]
 
             # dim should be (class, image), mmdetection format: (image, class)
             if len(det_results.shape) == 2:
@@ -218,7 +219,7 @@ class VOC_dataset:
         if det_file != '':
             with open(det_file, 'rb') as f:
                 det_results = np.asarray(
-                    pickle.load(f))  # [(bg + cls), images]
+                    pickle.load(f), dtype=object)  # [(bg + cls), images]
 
             # dim should be (class, image), mmdetection format: (image, class)
             det_results = np.transpose(det_results, (1, 0))
@@ -1039,14 +1040,21 @@ class vis_tool:
     def eventhandler(self, event):
         entry_list = [self.find_entry, self.th_entry, self.iou_th_entry]
         if self.window.focus_get() not in entry_list:
-            if event.state == 20 and event.keysym == 'Left':
+            if platform.system() == 'Windows':
+                state_1key = 8
+                state_2key = 12
+            else:  # 'Linux'
+                state_1key = 20
+                state_2key = 16
+          
+            if event.state == state_2key and event.keysym == 'Left':
                 self.change_iou_threshold_button(-0.1)
-            elif event.state == 20 and event.keysym == 'Right':
+            elif event.state == state_2key and event.keysym == 'Right':
                 self.change_iou_threshold_button(0.1) 
 
-            elif event.state == 16 and event.keysym == 'Left':
+            elif event.state == state_1key and event.keysym == 'Left':
                 self.change_threshold_button(-0.1)
-            elif event.state == 16 and event.keysym == 'Right':
+            elif event.state == state_1key and event.keysym == 'Right':
                 self.change_threshold_button(0.1)
             elif event.keysym == 'q':
                 self.window.quit()
