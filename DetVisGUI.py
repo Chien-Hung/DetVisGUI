@@ -1044,8 +1044,8 @@ class vis_tool:
                 state_1key = 8
                 state_2key = 12
             else:  # 'Linux'
-                state_1key = 20
-                state_2key = 16
+                state_1key = 16
+                state_2key = 20
           
             if event.state == state_2key and event.keysym == 'Left':
                 self.change_iou_threshold_button(-0.1)
