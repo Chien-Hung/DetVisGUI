@@ -4,12 +4,10 @@
 
 This is a lightweight GUI for visualizing the [mmdetection](https://github.com/open-mmlab/mmdetection) results. It could display detection results with **different threshold dynamically**, and would be convenient for verifying detection results and groundtruth. 
 
-
-**The command in the gif and youtube is for the master branch. Please reference the following example.**
 [![alt tag](./demo/demo.png)](https://www.youtube.com/watch?v=4imQyECTik0)
 
-Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 
+Video with text description : https://www.youtube.com/watch?v=4imQyECTik0 (**The command in the video is for the master branch. Please reference the following example.**)
 
 ## Dependencies
 -- mmdetection
