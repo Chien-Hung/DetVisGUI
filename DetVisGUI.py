@@ -155,7 +155,7 @@ class COCO_dataset:
         det_file = self.det_file
         if det_file != '':
             with open(det_file, 'rb') as f:
-                det_results = np.asarray(pickle.load(f))  # [(bg + cls), images]
+                det_results = np.asarray(pickle.load(f), dtype=object)  # [(bg + cls), images]
 
             if len(det_results.shape) == 2:
                 # dim should be (class, image), mmdetection format: (image, class)
@@ -235,7 +235,7 @@ class VOC_dataset:
         det_file = self.det_file
         if det_file != '':
             with open(det_file, 'rb') as f:
-                det_results = np.asarray(pickle.load(f))  # [(bg + cls), images]
+                det_results = np.asarray(pickle.load(f), dtype=object)  # [(bg + cls), images]
 
             # dim should be (class, image), mmdetection format: (image, class)
             det_results = np.transpose(det_results, (1, 0))
@@ -907,18 +907,25 @@ class vis_tool:
 
     def eventhandler(self, event):
         if self.window.focus_get() not in [self.find_entry, self.th_entry, self.iou_th_entry]:
+            if platform.system() == 'Windows':
+                state_1key = 8
+                state_2key = 12
+            else:  # 'Linux'
+                state_1key = 20
+                state_2key = 16
+
             # <KeyRelease event state=Control|Mod2 keysym=Left keycode=113 x=1337 y=617>
             # event.state = 20
-            if event.state == 20 and event.keysym == 'Left':
+            if event.state == state_2key and event.keysym == 'Left':
                 self.change_iou_threshold_button(-0.1)
-            elif event.state == 20 and event.keysym == 'Right':
+            elif event.state == state_2key and event.keysym == 'Right':
                 self.change_iou_threshold_button(0.1) 
 
             # <KeyRelease event state=Mod2 keysym=Left keycode=113 x=1266 y=410>
             # event.state = 16
-            elif event.state == 16 and event.keysym == 'Left':
+            elif event.state == state_1key and event.keysym == 'Left':
                 self.change_threshold_button(-0.1)
-            elif event.state == 16 and event.keysym == 'Right':
+            elif event.state == state_1key and event.keysym == 'Right':
                 self.change_threshold_button(0.1)
             elif event.keysym == 'q':
                 self.window.quit()
