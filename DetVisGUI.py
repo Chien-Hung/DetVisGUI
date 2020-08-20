@@ -656,8 +656,13 @@ class vis_tool:
             self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
 
         if self.data_info.has_anno:
-            self.iou = self.get_iou(boxes)
-
+            boxes2, _ = single_detection
+            self.iou = self.get_iou(boxes2)
+            if self.combo_category.get() != 'All':
+                iou = np.asarray([self.iou[show_idx]])
+            else:
+                iou = self.iou
+            
         # draw bounding box
         for idx, cls_objs in enumerate(boxes):
             if self.combo_category.get() == 'All':
@@ -674,7 +679,7 @@ class vis_tool:
                     ymax = min(box[3], self.img_height)
 
                     if not self.data_info.has_anno or \
-                        self.iou[idx][obj_idx] >= self.iou_threshold:
+                        iou[idx][obj_idx] >= self.iou_threshold:
                         color = self.args.det_box_color
                     else: 
                         color = (255, 0, 0)
@@ -829,6 +834,12 @@ class vis_tool:
                 img[mask] = img[mask] * 0.5 + color_mask * 0.5
                 self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
 
+        if self.data_info.has_anno:
+            if self.combo_category.get() != 'All':
+                iou = np.asarray([self.iou[show_idx]])
+            else:
+                iou = self.iou
+                
         # draw bounding box
         idx_counter = 0
         for idx, cls_objs in enumerate(boxes):
@@ -847,7 +858,7 @@ class vis_tool:
                         ymax = min(box[3], self.img_height)
 
                         if not self.data_info.has_anno or \
-                            self.iou[idx][obj_idx] >= self.iou_threshold:
+                            iou[idx][obj_idx] >= self.iou_threshold:
                             color = self.args.det_box_color
                         else: 
                             color = (255, 0, 0)
