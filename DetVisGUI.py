@@ -911,8 +911,8 @@ class vis_tool:
                 state_1key = 8
                 state_2key = 12
             else:  # 'Linux'
-                state_1key = 20
-                state_2key = 16
+                state_1key = 16
+                state_2key = 20
 
             # <KeyRelease event state=Control|Mod2 keysym=Left keycode=113 x=1337 y=617>
             # event.state = 20
