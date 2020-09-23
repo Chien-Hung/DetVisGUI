@@ -11,11 +11,14 @@ DetVisGUI supports **Pascal VOC** and **COCO** formats.
 Video with text description : https://www.youtube.com/watch?v=4imQyECTik0
 
 ## Dependencies
-- numpy
-- matplotlib
 - cv2
 - cocoapi
 
+```
+sudo apt-get install python3-pil python3-pil.imagetk
+pip install opencv-contrib-python
+pip install "git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI"
+```
 
 ## Code
 
