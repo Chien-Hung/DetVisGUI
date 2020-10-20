@@ -90,6 +90,9 @@ $ python DetVisGUI.py --format VOC \
       --no_gt
 ```
 
+## result(.pkl) format:
+![alt tag](./demo/result_format.png)
+
 ---
 
 ## Hotkeys
