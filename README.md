@@ -25,9 +25,6 @@ cd DetVisGUI
 
 I sample a small part of COCO and VOC2007 dataset, running mmdetection for getting detection result(\*.pkl) and use these files for demo.
 
-Clone the repository.
-
-
 ```
 python DetVisGUI.py ${CONFIG_FILE} ${RESULT_FILE} [--stage ${STAGE}] [--output ${SAVE_DIRECTORY}]
 ```
@@ -72,6 +69,10 @@ $ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py results/cascade_rcnn_r5
 ```
 $ python DetVisGUI.py configs/ssd512_voc.py results/ssd512_voc/test_results.pkl --stage test
 ```
+
+## result(.pkl) format
+
+![alt tag](./demo/result_format.png)
 
 ---
 
