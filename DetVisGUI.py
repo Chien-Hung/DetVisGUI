@@ -652,7 +652,10 @@ class vis_tool:
         self.color_list = []
         for i in inds:
             color_mask = np.random.randint(0, 256, (1, 3), dtype=np.uint8)
-            mask = maskUtils.decode(segms[i]).astype(np.bool)
+            if type(segms[0]) == np.ndarray:
+                mask = segms[i]
+            elif type(segms[0]) == dict:
+                mask = maskUtils.decode(segms[i]).astype(np.bool)
             img[mask] = img[mask] * 0.5 + color_mask * 0.5
             self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
 
@@ -831,7 +834,12 @@ class vis_tool:
         for inds_idx, i in enumerate(inds):
             if inds_idx == selected_idx:
                 color_mask = np.random.randint(0, 256, (1, 3), dtype=np.uint8)
-                mask = maskUtils.decode(segms[i]).astype(np.bool)
+
+                if type(segms[0]) == np.ndarray:
+                    mask = segms[i]
+                elif type(segms[0]) == dict:
+                    mask = maskUtils.decode(segms[i]).astype(np.bool)
+
                 img[mask] = img[mask] * 0.5 + color_mask * 0.5
                 self.color_list.append('#%02x%02x%02x' % tuple(color_mask[0]))
 
