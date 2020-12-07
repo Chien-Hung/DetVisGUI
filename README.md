@@ -75,10 +75,6 @@ $ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py results/cascade_rcnn_r5
 $ python DetVisGUI.py configs/ssd512_voc.py results/ssd512_voc/test_results.pkl --stage test
 ```
 
-## result(.pkl) format
-
-![alt tag](./demo/result_format.png)
-
 ---
 
 ## Directly Inference model on GUI
@@ -123,4 +119,10 @@ $ python DetVisGUI_test.py configs/mask_rcnn_r50_fpn_1x_coco.py checkpoints/mask
 | ctrl +  ← , →    | change IoU threshold.                    | 
 |     s     | save displayed image in output folder.     |
 |     q     | colse this GUI.                            |
+
+
+## result(.pkl) format
+
+![alt tag](./demo/result_format.png)
+
 
