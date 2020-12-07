@@ -79,7 +79,7 @@ $ python DetVisGUI.py configs/ssd512_voc.py results/ssd512_voc/test_results.pkl 
 
 ## Directly Inference model on GUI
 
-If you want to inference model and directly show the results on GUI, please run the following command. For running the example, you need to download [faster_rcnn_r50_fpn_1x_coco](https://github.com/open-mmlab/mmdetection/tree/master/configs/faster_rcnn) / [mask_rcnn_r50_fpn_1x_coco](https://github.com/open-mmlab/mmdetection) checkpoints from mmdetection github and place them in checkpoints.
+If you want to inference model and directly show the results on GUI, please run the following command. For running the example, you need to download [faster_rcnn_r50_fpn_1x_coco](https://github.com/open-mmlab/mmdetection/tree/master/configs/faster_rcnn) / [mask_rcnn_r50_fpn_1x_coco](https://github.com/open-mmlab/mmdetection/tree/master/configs/mask_rcnn) checkpoints from mmdetection github and place them in checkpoints.
 
 ```
 python DetVisGUI_test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} ${TEST_IMAGES_FOLDER} [--device ${DEVICE}]
