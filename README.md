@@ -1,5 +1,10 @@
 # DetVisGUI
 
+## UPDATE
+
+Support inference model and directly show the results on GUI.
+
+
 ## Introuction
 
 This is a lightweight GUI for visualizing the [mmdetection](https://github.com/open-mmlab/mmdetection) results. It could display detection results with **different threshold dynamically**, and would be convenient for verifying detection results and groundtruth. 
@@ -73,6 +78,39 @@ $ python DetVisGUI.py configs/ssd512_voc.py results/ssd512_voc/test_results.pkl 
 ## result(.pkl) format
 
 ![alt tag](./demo/result_format.png)
+
+---
+
+## Directly Inference model on GUI
+
+If you want to inference model and directly show the results on GUI, please run the following command. For running the example, you need to download [faster_rcnn_r50_fpn_1x_coco](https://github.com/open-mmlab/mmdetection/tree/master/configs/faster_rcnn) / [mask_rcnn_r50_fpn_1x_coco](https://github.com/open-mmlab/mmdetection) checkpoints from mmdetection github and place them in checkpoints.
+
+```
+python DetVisGUI_test.py ${CONFIG_FILE} ${CHECKPOINT_FILE} ${TEST_IMAGES_FOLDER} [--device ${DEVICE}]
+```
+
+Arguments:
+
+- `CONFIG_FILE`: Config file of mmdetction.
+- `CHECKPOINT_FILE`: Trained model.
+- `TEST_IMAGES_FOLDER`: Test images folder path.
+
+Optional Arguments:
+
+- `DEVICE`: cpu or cuda, Default is cuda.
+
+**Display the faster rcnn results:**
+
+```
+$ python DetVisGUI_test.py configs/faster_rcnn_r50_fpn_1x_coco.py checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth data/test_images
+```
+
+**Display the mask rcnn results:** 
+
+```
+$ python DetVisGUI_test.py configs/mask_rcnn_r50_fpn_1x_coco.py checkpoints/mask_rcnn_r50_fpn_1x_coco_20200205-d4b0c5d6.pth data/test_images
+```
+
 
 ---
 
