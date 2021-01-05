@@ -2,7 +2,7 @@
 
 ## UPDATE
 
-2021/01/05 : Support json format detection output file.
+2021/01/05 : Support json format for det_file.
 
 2020/12/08 : Support inference model and directly show the results on GUI.
 
