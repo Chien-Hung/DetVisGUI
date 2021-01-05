@@ -24,7 +24,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='DetVisGUI')
 
     parser.add_argument('config', help='config file path')
-    parser.add_argument('det_file', help='detection results file path')
+    parser.add_argument('--det_file', 
+    	default='',
+    	help='detection results file path')
 
     parser.add_argument(
         '--stage',
@@ -63,8 +65,8 @@ class COCO_dataset:
         self.mask = False
 
         # according json to get category, image list, and annotations.
-        self.category, self.img_list, self.total_annotations = self.parse_json(
-            self.anno_root, self.has_anno)
+        self.category, self.img_list, self.total_annotations, self.cat2idx, \
+            self.img2idx = self.parse_json(self.anno_root, self.has_anno)
         self.aug_category = aug_category(self.category)
 
         self.results = self.get_det_results() if self.det_file != '' else None
@@ -90,11 +92,13 @@ class COCO_dataset:
         images = data['images']
 
         category_dict = {c['id']: c['name'] for c in data['categories']}
+        cat2idx = {c['id']: i for i, c in enumerate(data['categories'])}
         max_category_id = max(category_dict.keys())
 
         # id to image mapping
         image_dict = {}
         img_list = list()
+        img_id_list = list()
 
         for image in images:
             key = image['id']
@@ -102,7 +106,9 @@ class COCO_dataset:
                 image['file_name'], image['width'], image['height']
             ]
             img_list.append(image['file_name'])
+            img_id_list.append(key)
 
+        img2idx = {x:i for i, x in enumerate(img_id_list)}
         category_count = [0 for _ in range(max_category_id)]
 
         total_annotations = {}
@@ -137,21 +143,56 @@ class COCO_dataset:
                 if cnt != 0:
                     print('{:^20}| {}'.format(c, cnt))
             print()
-        return category, img_list, total_annotations
+        return category, img_list, total_annotations, cat2idx, img2idx
 
     def get_det_results(self):
         det_file = self.det_file
         if det_file != '':
-            with open(det_file, 'rb') as f:
-                det_results = np.asarray(
-                    pickle.load(f), dtype=object)  # [(bg + cls), images]
+            if det_file.endswith('.pkl'):
+                with open(det_file, 'rb') as f:
+                    det_results = np.asarray(
+                        pickle.load(f), dtype=object)  # [(bg + cls), images]
 
-            # dim should be (class, image), mmdetection format: (image, class)
-            if len(det_results.shape) == 2:
-                det_results = np.transpose(det_results, (1, 0))
-            elif len(det_results.shape) == 3:
-                det_results = np.transpose(det_results, (2, 0, 1))
-                self.mask = True
+                # dim should be (class, image)
+                if len(det_results.shape) == 2:
+                    det_results = np.transpose(det_results, (1, 0))
+
+                # dim should be (class, image, mask)
+                elif len(det_results.shape) == 3:
+                    det_results = np.transpose(det_results, (2, 0, 1))
+                    self.mask = True
+
+            elif det_file.endswith('.json'):
+                with open(det_file) as f:
+                    json_results = json.load(f)
+
+                if 'segmentation' in json_results[0]:
+                    self.mask = True
+                    det_results = [[[np.empty((0, 5)),[]] for _ in range(len(self.img_list))] for _ in range(len(self.cat2idx))]
+                   
+                    for res in json_results:
+                        img_idx = self.img2idx[res['image_id']]
+                        cat_idx = self.cat2idx[res['category_id']]
+                        x, y, w, h = res['bbox']
+                              
+                        det_results[cat_idx][img_idx][0] = np.concatenate(
+                        	(det_results[cat_idx][img_idx][0], np.asarray([x, y, x+w, y+h, res['score']]).reshape(1, -1))
+                        )
+                        det_results[cat_idx][img_idx][1].append(res['segmentation'])
+
+                elif 'bbox' in json_results[0]:
+                    det_results = [[np.empty((0, 5)) for _ in range(len(self.img_list))] for _ in range(len(self.cat2idx))]
+                
+                    for res in json_results:
+                        img_idx = self.img2idx[res['image_id']]
+                        cat_idx = self.cat2idx[res['category_id']]
+                        x, y, w, h = res['bbox']
+
+                        det_results[cat_idx][img_idx] = np.concatenate(
+                        	(det_results[cat_idx][img_idx], np.asarray([x, y, x+w, y+h, res['score']]).reshape(1, -1))
+                        )
+                        
+                det_results = np.asarray(det_results, dtype=object)
 
             return det_results
 
@@ -1150,22 +1191,23 @@ class vis_tool:
             pady=3,
             columnspan=6)
 
-        # show det
-        self.checkbn_det.grid(
-            row=layer1 + 40,
-            column=0,
-            sticky=N + S,
-            padx=3,
-            pady=3,
-            columnspan=4)
-        # show det text
-        self.checkbn_det_txt.grid(
-            row=layer1 + 40,
-            column=4,
-            sticky=N + S,
-            padx=3,
-            pady=3,
-            columnspan=2)
+        if self.data_info.det_file != '':
+	        # show det
+	        self.checkbn_det.grid(
+	            row=layer1 + 40,
+	            column=0,
+	            sticky=N + S,
+	            padx=3,
+	            pady=3,
+	            columnspan=4)
+	        # show det text
+	        self.checkbn_det_txt.grid(
+	            row=layer1 + 40,
+	            column=4,
+	            sticky=N + S,
+	            padx=3,
+	            pady=3,
+	            columnspan=2)
         if self.data_info.has_anno != False:
             # show gt
             self.checkbn_gt.grid(
@@ -1198,13 +1240,7 @@ class vis_tool:
             row=layer2 + 20, column=8, sticky=E + W, pady=3, columnspan=4)
 
         self.scrollbar_img.grid(row=layer2 + 30, column=11, sticky=N + S + W)
-        self.label_img.grid(
-            row=layer1 + 30,
-            column=12,
-            sticky=N + E,
-            padx=3,
-            pady=3,
-            rowspan=110)
+        self.label_img.place(x = 375, y = 3, anchor=N + W)
         self.listBox_img.grid(
             row=layer2 + 30,
             column=0,

@@ -2,7 +2,9 @@
 
 ## UPDATE
 
-2020/12/8 : Support inference model and directly show the results on GUI.
+2021/01/05 : Support json format detection output file.
+
+2020/12/08 : Support inference model and directly show the results on GUI.
 
 ---
 
@@ -33,16 +35,16 @@ cd DetVisGUI
 I sample a small part of COCO and VOC2007 dataset, running mmdetection for getting detection result(\*.pkl) and use these files for demo.
 
 ```
-python DetVisGUI.py ${CONFIG_FILE} ${RESULT_FILE} [--stage ${STAGE}] [--output ${SAVE_DIRECTORY}]
+python DetVisGUI.py ${CONFIG_FILE} [--det_file ${RESULT_FILE}] [--stage ${STAGE}] [--output ${SAVE_DIRECTORY}]
 ```
 
 Arguments:
 
 - `CONFIG_FILE`: Config file of mmdetction.
-- `RESULT_FILE`: Filename of the output results in pickle format.
 
 Optional Arguments:
 
+- `RESULT_FILE`: Filename of the output results in pickle / json format.
 - `STAGE`: The stage [train / val / test] of the result file, default is 'val'.
 - `SAVE_DIRECTORY`: The directory for saving display images, default is 'output'.
 
@@ -50,31 +52,50 @@ Optional Arguments:
 **Display the validation results of COCO segmentation:** 
 
 ```
-$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py results/mask_rcnn_r50_fpn_1x/val_results.pkl
+$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py --det_file results/mask_rcnn_r50_fpn_1x/val_results.pkl
 ```
 
 **Display the test results of COCO segmentation(no groundtruth):**
 
 ```
-$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py results/mask_rcnn_r50_fpn_1x/test_results.pkl --stage test
+$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py --det_file results/mask_rcnn_r50_fpn_1x/test_results.pkl --stage test
 ```
 
 **Display the validation results of COCO detection:** 
 
 ```
-$ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py results/cascade_rcnn_r50_c4_1x/val_results.pkl
+$ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py --det_file results/cascade_rcnn_r50_c4_1x/val_results.pkl
 ```
 
 **Display the test results of COCO detection(no groundtruth):**
 
 ```
-$ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py results/cascade_rcnn_r50_c4_1x/test_results.pkl --stage test
+$ python DetVisGUI.py configs/cascade_rcnn_r50_fpn_1x.py --det_file results/cascade_rcnn_r50_c4_1x/test_results.pkl --stage test
 ```
 
 **Display the test results of Pascal VOC(no groundtruth):**
 
 ```
-$ python DetVisGUI.py configs/ssd512_voc.py results/ssd512_voc/test_results.pkl --stage test
+$ python DetVisGUI.py configs/ssd512_voc.py --det_file results/ssd512_voc/test_results.pkl --stage test
+```
+
+**Display the validation results of COCO segmentation by json output file:** 
+
+```
+$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py --det_file results/mask_rcnn_r50_fpn_1x/val_results.segm.json
+```
+
+**Display the validation results of COCO detection by json output file:** 
+
+```
+$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py --det_file results/mask_rcnn_r50_fpn_1x/val_results.bbox.json
+```
+
+
+**Display the COCO bounding box groundtruth:** 
+
+```
+$ python DetVisGUI.py configs/mask_rcnn_r50_fpn_1x.py
 ```
 
 ---
