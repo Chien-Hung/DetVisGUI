@@ -139,9 +139,11 @@ class COCO_dataset:
             print('----------------------------')
             print('{:^20}| count'.format('class'))
             print('----------------------------')
-            for c, cnt in zip(category, category_count):
+            for idx, cat_idx in enumerate(cat2idx): 
+                c = category[idx]
+                cnt = category_count[cat_idx-1]
                 if cnt != 0:
-                    print('{:^20}| {}'.format(c, cnt))
+                    print('{:^20}| {}'.format(c, cnt)) 
             print()
         return category, img_list, total_annotations, cat2idx, img2idx
 
