@@ -109,7 +109,7 @@ class COCO_dataset:
             img_id_list.append(key)
 
         img2idx = {x:i for i, x in enumerate(img_id_list)}
-        category_count = [0 for _ in range(max_category_id)]
+        category_count = [0 for _ in range(max_category_id + 1)]
 
         total_annotations = {}
 
@@ -127,7 +127,7 @@ class COCO_dataset:
                 if image_name not in total_annotations:
                     total_annotations[image_name] = []
 
-                category_count[idx - 1] += 1
+                category_count[idx] += 1
                 total_annotations[image_name].append(single_ann)
 
             print('\n==============[ {} json info ]=============='.format(
@@ -141,7 +141,7 @@ class COCO_dataset:
             print('----------------------------')
             for idx, cat_idx in enumerate(cat2idx): 
                 c = category[idx]
-                cnt = category_count[cat_idx-1]
+                cnt = category_count[cat_idx]
                 if cnt != 0:
                     print('{:^20}| {}'.format(c, cnt)) 
             print()
