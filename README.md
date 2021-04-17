@@ -2,6 +2,8 @@
 
 ## UPDATE
 
+2021/04/17 : Add save all images function.
+
 2021/01/05 : Support json format for det_file.
 
 2020/12/08 : Support inference model and directly show the results on GUI.
@@ -19,6 +21,7 @@ Video with text description : https://www.youtube.com/watch?v=4imQyECTik0 (**The
 
 ## Dependencies
 -- mmdetection
+-- tqdm
 
 
 ## Code

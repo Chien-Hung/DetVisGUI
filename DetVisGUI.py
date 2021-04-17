@@ -16,6 +16,7 @@ import numpy as np
 import platform
 import pycocotools.mask as maskUtils
 from PIL import Image, ImageTk
+from tqdm import trange
 
 matplotlib.use('TkAgg')
 
@@ -1088,6 +1089,35 @@ class vis_tool:
             cv2.cvtColor(self.show_img, cv2.COLOR_BGR2RGB))
         self.listBox_img_label.config(bg='#CCFF99')
 
+
+    def save_all_images(self):
+        print('plot all images ... ')
+
+        for listBox_img_idx in trange(len(self.data_info.img_list)):
+
+            name = self.listBox_img.get(listBox_img_idx)
+            self.img_name = name
+
+            img = np.asarray(self.data_info.get_img_by_name(name))
+            self.img = img
+
+            if self.data_info.has_anno and self.show_gts.get():
+                objs = self.data_info.get_singleImg_gt(name)
+                img = self.draw_gt_boxes(img, objs)
+
+            if self.data_info.results is not None and self.show_dets.get():
+                if self.data_info.mask is False:
+                    dets = self.data_info.get_singleImg_dets(name)
+                    img = self.draw_all_det_boxes(img, dets)
+                else:
+                    dets = self.data_info.get_singleImg_dets(name).transpose(
+                        (1, 0))
+                    img = self.draw_all_det_boxes_masks(img, dets)
+
+            cv2.imwrite(os.path.join(self.output, name),
+                cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+
     def eventhandler(self, event):
         entry_list = [self.find_entry, self.th_entry, self.iou_th_entry]
         if self.window.focus_get() not in entry_list:
@@ -1166,6 +1196,7 @@ class vis_tool:
         self.window.geometry('1280x800+350+100')
 
         # self.menubar.add_command(label='QUIT', command=self.window.quit)
+        self.menubar.add_command(label='Save All Results', command=self.save_all_images)
         self.window.config(menu=self.menubar)  # display the menu
         self.scrollbar_img.config(command=self.listBox_img.yview)
         self.listBox_img.config(yscrollcommand=self.scrollbar_img.set)
